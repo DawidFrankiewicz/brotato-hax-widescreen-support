@@ -1,5 +1,6 @@
 extends "res://main.gd"
 
+# Changed calculations to fix arena centering
 func init_camera() -> void:
 	var max_pos = ZoneService.current_zone_max_position
 	var min_pos = ZoneService.current_zone_min_position
