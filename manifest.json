@@ -1,0 +1,15 @@
+{
+	"name": "WidescreenSupport",
+	"namespace": "Hax",
+	"version_number": "0.0.1",
+	"description": "#",
+	"website_url": "#",
+	"dependencies": [],
+	"extra": {
+		"godot": {
+			"authors": ["Hax"],
+			"compatible_mod_loader_version": ["6.2.0"],
+			"compatible_game_version": ["1.0.1.3"]
+		}
+	}
+}
