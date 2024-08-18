@@ -1,5 +1,7 @@
 # Brotato Widescreen Support Mod
 
-Removes black bars on wide screens.
+Removes black bars on wide screens. Fixes some issues with wide screen. 
 
-This mod is worki in progress 👷
+Known issues:
+- Currently home screen is visually destroyed by extra width.
+- Game might breake if screen size is changed while playing in some cases <br>(going back to main menu should fix all problems).
