@@ -1,9 +1,9 @@
 {
 	"name": "WidescreenSupport",
 	"namespace": "Hax",
-	"version_number": "0.0.1",
-	"description": "#",
-	"website_url": "#",
+	"version_number": "0.4.0",
+	"description": "Adds better support for widescreen",
+	"website_url": "https://github.com/DawidFrankiewicz/brotato-hax-widescreen-support",
 	"dependencies": [],
 	"extra": {
 		"godot": {
