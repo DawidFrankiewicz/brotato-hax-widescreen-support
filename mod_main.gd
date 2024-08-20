@@ -5,9 +5,13 @@ func _init() -> void:
 	ModLoaderMod.install_script_extension(dir + "/extensions/main.gd")
 	ModLoaderMod.install_script_extension(dir + "/extensions/shop.gd")
 
-	# Override default project settings
-	ProjectSettings.set_setting("display/window/stretch/aspect", "expand")
-	ProjectSettings.save_custom("res://override.cfg")
-
 func _ready() -> void:
 	ModLoaderLog.info("Ready!", "Hax-WidescreenSupport:Main")
+
+	# Set screen stretch
+	var window_size = get_viewport().get_visible_rect().size
+	get_tree().set_screen_stretch(
+				SceneTree.STRETCH_MODE_2D,
+				SceneTree.STRETCH_ASPECT_EXPAND,
+				window_size
+			)
