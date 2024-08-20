@@ -7,6 +7,10 @@ func _ready():
 	_background.rect_size.y = window_size.x
 	_background.rect_position.x = window_size.x
 
+	# Set extra height to fix weird gray bar in top left corner
+	_background.rect_size.x = window_size.y + 2
+	_background.margin_top = -1
+
 # Override calculations to fix arena centering
 func init_camera() -> void:
 	var window_size = get_viewport().get_visible_rect().size
