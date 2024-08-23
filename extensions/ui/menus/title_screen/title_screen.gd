@@ -4,11 +4,21 @@ var background_animation_time = 3
 var background_size_multiplier = 1.08
 var animated_background_size_multiplier = 1.16
 
+var tween_back: SceneTreeTween
+var tween_front: SceneTreeTween
+
 func _ready():
 	resize_elements()
 	var _size_changed_value = get_tree().get_root().connect("size_changed", self, "resize_elements")
 	
 func resize_elements():
+	if (tween_back):
+		tween_back.kill()
+		tween_back = null
+	if (tween_front):
+		tween_front.kill()
+		tween_front = null
+
 	var window_size = get_viewport().get_visible_rect().size
 
 	# Center container
@@ -37,9 +47,9 @@ func resize_elements():
 	$BackgroundMistBack.rect_position.x = -((window_size.x * animated_background_size_multiplier - 1920) / 2)
 
 	## Recreate animation with tween
-	var tween_back = get_tree().create_tween().set_loops().set_trans(Tween.TRANS_QUAD)
-	tween_back.tween_property($BackgroundMistBack, "rect_position", Vector2(-((window_size.x - 1920) / 2), 0), background_animation_time)
-	tween_back.tween_property($BackgroundMistBack, "rect_position", Vector2(-((window_size.x * animated_background_size_multiplier - 1920) / 2), 0), background_animation_time)
+	tween_back = create_tween().set_loops().set_trans(Tween.TRANS_QUAD)
+	var _unused_1 = tween_back.tween_property($BackgroundMistBack, "rect_position", Vector2(-((window_size.x - 1920) / 2), 0), background_animation_time)
+	var _unused_2 = tween_back.tween_property($BackgroundMistBack, "rect_position", Vector2(-((window_size.x * animated_background_size_multiplier - 1920) / 2), 0), background_animation_time)
 
 
 	# Background Mist Mid
@@ -54,6 +64,6 @@ func resize_elements():
 	$BackgroundMistFront.rect_position.x = -((window_size.x - 1920) / 2)
 
 	## Recreate animation with tween
-	var tween_front = get_tree().create_tween().set_loops().set_trans(Tween.TRANS_QUAD)
-	tween_front.tween_property($BackgroundMistFront, "rect_position", Vector2(-((window_size.x * animated_background_size_multiplier - 1920) / 2), 0), background_animation_time)
-	tween_front.tween_property($BackgroundMistFront, "rect_position", Vector2(-((window_size.x - 1920) / 2), 0), background_animation_time)
+	tween_front = create_tween().set_loops().set_trans(Tween.TRANS_QUAD)
+	var _unused_3 = tween_front.tween_property($BackgroundMistFront, "rect_position", Vector2(-((window_size.x * animated_background_size_multiplier - 1920) / 2), 0), background_animation_time)
+	var _unused_4 = tween_front.tween_property($BackgroundMistFront, "rect_position", Vector2(-((window_size.x - 1920) / 2), 0), background_animation_time)
