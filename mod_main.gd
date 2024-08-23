@@ -7,6 +7,7 @@ func _init() -> void:
 	ModLoaderMod.install_script_extension(dir + "/extensions/ui/menus/run/character_selection.gd")
 	ModLoaderMod.install_script_extension(dir + "/extensions/ui/menus/run/weapons_selection.gd")
 	ModLoaderMod.install_script_extension(dir + "/extensions/ui/menus/run/difficulty_selection/difficulty_selection.gd")
+	ModLoaderMod.install_script_extension(dir + "/extensions/ui/menus/title_screen/title_screen.gd")
 
 func _ready() -> void:
 	ModLoaderLog.info("Ready!", "Hax-WidescreenSupport:Main")
