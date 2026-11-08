@@ -7,6 +7,8 @@ var _title_background: WeakRef
 var _shop: WeakRef
 var _character: WeakRef
 var _main: WeakRef
+var _backdrops: Array = []
+var _pause_menus: Array = []
 
 var _tween_back: SceneTreeTween
 var _tween_front: SceneTreeTween
@@ -42,6 +44,8 @@ func _on_size_changed() -> void:
 	_refit(_shop, "_fit_shop")
 	_refit(_character, "_fit_character")
 	_refit(_main, "_fit_main")
+	_refit_backdrops()
+	_refit_pause_menus()
 
 
 func _on_node_added(node: Node) -> void:
@@ -62,6 +66,12 @@ func _on_node_added(node: Node) -> void:
 	elif _is_title_background(node):
 		_title_background = weakref(node)
 		call_deferred("_fit_title_background", node)
+	elif _is_menu_backdrop(node):
+		_backdrops.append(weakref(node))
+		call_deferred("_fit_backdrop", node)
+	elif node.name == "PauseMenu" and node.get_node_or_null("Menus") != null:
+		_pause_menus.append(weakref(node))
+		call_deferred("_fit_pause_menu", node)
 
 
 func _refit(node_ref: WeakRef, method_name: String) -> void:
@@ -74,7 +84,68 @@ func _refit(node_ref: WeakRef, method_name: String) -> void:
 
 func _is_title_background(node: Node) -> bool:
 	var parent = node.get_parent()
-	return parent != null and parent.name == "AnimatedBackgroundContainer" and node.has_node("Background")
+	return parent != null and parent.name == "AnimatedBackgroundContainer" and node is Control
+
+
+func _is_menu_backdrop(node: Node) -> bool:
+	if not node is TextureRect or node.name != "Background":
+		return false
+	var parent = node.get_parent()
+	if parent == null or parent.name == "CanvasLayer":
+		return false
+	return not _is_under(node, "AnimatedBackgroundContainer")
+
+
+func _is_under(node: Node, ancestor_name: String) -> bool:
+	var current = node.get_parent()
+	while current != null:
+		if current.name == ancestor_name:
+			return true
+		current = current.get_parent()
+	return false
+
+
+func _refit_backdrops() -> void:
+	var alive = []
+	for backdrop_ref in _backdrops:
+		var backdrop = backdrop_ref.get_ref()
+		if backdrop != null and is_instance_valid(backdrop):
+			alive.append(backdrop_ref)
+			_fit_backdrop(backdrop)
+	_backdrops = alive
+
+
+func _refit_pause_menus() -> void:
+	var alive = []
+	for menu_ref in _pause_menus:
+		var menu = menu_ref.get_ref()
+		if menu != null and is_instance_valid(menu):
+			alive.append(menu_ref)
+			_fit_pause_menu(menu)
+	_pause_menus = alive
+
+
+func _fit_pause_menu(pause_menu: Node) -> void:
+	var menus = pause_menu.get_node_or_null("Menus")
+	if menus == null:
+		return
+	var window_size = get_viewport().get_visible_rect().size
+	menus.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	menus.rect_min_size.x = min(DESIGN_SIZE.x, window_size.x)
+	if pause_menu is Container:
+		pause_menu.queue_sort()
+
+
+func _fit_backdrop(art: TextureRect) -> void:
+	var window_size = get_viewport().get_visible_rect().size
+	art.anchor_left = 0
+	art.anchor_top = 0
+	art.anchor_right = 0
+	art.anchor_bottom = 0
+	art.expand = true
+	art.stretch_mode = TextureRect.STRETCH_SCALE
+	art.rect_position = Vector2.ZERO
+	art.rect_size = window_size
 
 
 func _fit_title(title: Node) -> void:
@@ -95,6 +166,29 @@ func _fit_title(title: Node) -> void:
 
 
 func _fit_title_background(background: Node) -> void:
+	if background.has_node("BackgroundMistBack"):
+		_fit_classic_title_background(background)
+	elif background is Control:
+		_fit_scaled_scene(background)
+
+
+func _fit_scaled_scene(background: Control) -> void:
+	var window_size = get_viewport().get_visible_rect().size
+	if background.anchor_right > 0.5 or background.anchor_bottom > 0.5 or background.rect_size.x > 200.0:
+		background.anchor_left = 0
+		background.anchor_top = 0
+		background.anchor_right = 0
+		background.anchor_bottom = 0
+		background.margin_left = 0
+		background.margin_top = 0
+		background.margin_right = DESIGN_SIZE.x
+		background.margin_bottom = DESIGN_SIZE.y
+		background.rect_position = Vector2.ZERO
+	background.rect_pivot_offset = Vector2.ZERO
+	background.rect_scale = Vector2(window_size.x / DESIGN_SIZE.x, window_size.y / DESIGN_SIZE.y)
+
+
+func _fit_classic_title_background(background: Node) -> void:
 	if _tween_back:
 		_tween_back.kill()
 		_tween_back = null
