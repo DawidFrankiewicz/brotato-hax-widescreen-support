@@ -1,15 +1,15 @@
 {
 	"name": "WidescreenSupport",
 	"namespace": "Hax",
-	"version_number": "1.3.2",
+	"version_number": "1.4.0",
 	"description": "Adds support for widescreen. Removes black bars.",
 	"website_url": "https://github.com/DawidFrankiewicz/brotato-hax-widescreen-support",
 	"dependencies": [],
 	"extra": {
 		"godot": {
 			"authors": ["Hax"],
-			"compatible_mod_loader_version": ["6.2.0"],
-			"compatible_game_version": ["1.0.1.3"]
+			"compatible_mod_loader_version": ["6.3.0"],
+			"compatible_game_version": ["1.2.0.1"]
 		}
 	}
 }
