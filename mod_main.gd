@@ -72,6 +72,9 @@ func _on_node_added(node: Node) -> void:
 	elif node.name == "PauseMenu" and node.get_node_or_null("Menus") != null:
 		_pause_menus.append(weakref(node))
 		call_deferred("_fit_pause_menu", node)
+	elif node.name == "BackgroundButton" and node is OptionButton:
+		if not node.is_connected("item_selected", self, "_on_zone_background_selected"):
+			node.connect("item_selected", self, "_on_zone_background_selected")
 
 
 func _refit(node_ref: WeakRef, method_name: String) -> void:
@@ -160,16 +163,56 @@ func _fit_title(title: Node) -> void:
 	if background_container == null:
 		return
 	for child in background_container.get_children():
+		if child.is_queued_for_deletion():
+			continue
 		if _is_title_background(child):
 			_title_background = weakref(child)
 			_fit_title_background(child)
 
 
+func _on_zone_background_selected(_index: int) -> void:
+	call_deferred("_apply_zone_background")
+
+
+func _apply_zone_background() -> void:
+	var background = RunData.get_background()
+	if background == null:
+		return
+	var sprite = background.get_tiles_sprite()
+	_apply_zone_background_to(get_tree().get_root(), background, sprite)
+
+
+func _apply_zone_background_to(node: Node, background, sprite) -> void:
+	if node.has_method("_update_bg"):
+		node.call("_update_bg")
+	if node.name == "TileMap" and node.get_parent() != null and node.get_parent().name == "Main" and node.tile_set != null:
+		node.tile_set.tile_set_texture(0, sprite)
+		var outline = node.get_node_or_null("Outline")
+		if outline != null:
+			outline.modulate = background.outline_color
+	for child in node.get_children():
+		_apply_zone_background_to(child, background, sprite)
+
+
 func _fit_title_background(background: Node) -> void:
+	if not is_instance_valid(background) or background.is_queued_for_deletion():
+		return
+	# The previous art is freed on the same frame. Kill its tweens first, or
+	# set_loops() keeps stepping a dead node and Godot reports an infinite loop.
+	_kill_mist_tweens()
 	if background.has_node("BackgroundMistBack"):
 		_fit_classic_title_background(background)
 	elif background is Control:
 		_fit_scaled_scene(background)
+
+
+func _kill_mist_tweens() -> void:
+	if _tween_back and is_instance_valid(_tween_back):
+		_tween_back.kill()
+	_tween_back = null
+	if _tween_front and is_instance_valid(_tween_front):
+		_tween_front.kill()
+	_tween_front = null
 
 
 func _fit_scaled_scene(background: Control) -> void:
@@ -189,13 +232,6 @@ func _fit_scaled_scene(background: Control) -> void:
 
 
 func _fit_classic_title_background(background: Node) -> void:
-	if _tween_back:
-		_tween_back.kill()
-		_tween_back = null
-	if _tween_front:
-		_tween_front.kill()
-		_tween_front = null
-
 	var window_size = get_viewport().get_visible_rect().size
 	var art = background.get_node_or_null("Background")
 	if art is TextureRect:
@@ -237,7 +273,7 @@ func _fit_mist(background: Node, node_name: String, window_size: Vector2, from_l
 	var covered = Vector2.ZERO
 	mist.rect_position = inset if from_left else covered
 
-	var tween = create_tween().set_loops().set_trans(Tween.TRANS_QUAD)
+	var tween = create_tween().bind_node(mist).set_loops().set_trans(Tween.TRANS_QUAD)
 	if from_left:
 		_tween_back = tween
 		tween.tween_property(mist, "rect_position", covered, BACKGROUND_ANIMATION_TIME)

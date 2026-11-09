@@ -1,7 +1,7 @@
 {
 	"name": "WidescreenSupport",
 	"namespace": "Hax",
-	"version_number": "1.4.0",
+	"version_number": "1.4.1",
 	"description": "Adds support for widescreen. Removes black bars.",
 	"website_url": "https://github.com/DawidFrankiewicz/brotato-hax-widescreen-support",
 	"dependencies": [],
