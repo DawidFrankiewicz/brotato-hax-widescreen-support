@@ -22,6 +22,7 @@ const ANIMATED_BACKGROUND_SIZE_MULTIPLIER := 1.16
 
 func _ready() -> void:
 	ModLoaderLog.info("Ready!", "Hax-WidescreenSupport:Main")
+	ModLoaderMod.install_script_extension("res://mods-unpacked/Hax-WidescreenSupport/extensions/fog_viewport.gd")
 	_apply_stretch()
 	var _node_added = get_tree().connect("node_added", self, "_on_node_added")
 	var _size_changed = get_tree().get_root().connect("size_changed", self, "_on_size_changed")
