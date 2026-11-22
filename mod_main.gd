@@ -7,11 +7,13 @@ var _title_background: WeakRef
 var _shop: WeakRef
 var _character: WeakRef
 var _main: WeakRef
+var _coop_upgrades: WeakRef
 var _backdrops: Array = []
 var _pause_menus: Array = []
 
 var _tween_back: SceneTreeTween
 var _tween_front: SceneTreeTween
+var _applying_stretch := false
 
 const BACKGROUND_ANIMATION_TIME := 3.0
 const BACKGROUND_SIZE_MULTIPLIER := 1.08
@@ -26,24 +28,36 @@ func _ready() -> void:
 
 
 func _apply_stretch() -> void:
-	var window_size = get_viewport().get_visible_rect().size
+	# Keep the stretch base at the design size. Expand grows the logical view
+	# when the window is wider, and scales that view down when the window is
+	# smaller, so the 1920 layout stays on screen. Basing stretch on the
+	# current visible rect instead latches onto the largest size and shrinks
+	# further on every resize.
+	var window_size = OS.get_window_size()
+	if window_size.x < 1.0 or window_size.y < 1.0:
+		return
+	_applying_stretch = true
 	get_tree().set_screen_stretch(
 		SceneTree.STRETCH_MODE_2D,
 		SceneTree.STRETCH_ASPECT_EXPAND,
-		window_size
+		DESIGN_SIZE
 	)
-	window_size = get_viewport().get_visible_rect().size
-	Utils.project_width = window_size.x
-	Utils.project_height = window_size.y
+	var logical_size = get_viewport().get_visible_rect().size
+	Utils.project_width = logical_size.x
+	Utils.project_height = logical_size.y
+	_applying_stretch = false
 
 
 func _on_size_changed() -> void:
+	if _applying_stretch:
+		return
 	_apply_stretch()
 	_refit(_title, "_fit_title")
 	_refit(_title_background, "_fit_title_background")
 	_refit(_shop, "_fit_shop")
 	_refit(_character, "_fit_character")
 	_refit(_main, "_fit_main")
+	_refit(_coop_upgrades, "_fit_coop_upgrades")
 	_refit_backdrops()
 	_refit_pause_menus()
 
@@ -57,6 +71,9 @@ func _on_node_added(node: Node) -> void:
 	elif (node.name == "Shop" or node.name == "CoopShop") and node.get_node_or_null("Content") != null:
 		_shop = weakref(node)
 		call_deferred("_fit_shop", node)
+	elif node.name == "CoopUpgradesUI" and node.get_node_or_null("Content") != null:
+		_coop_upgrades = weakref(node)
+		call_deferred("_fit_coop_upgrades", node)
 	elif node.name == "CharacterSelection" and node.get_node_or_null("Background") != null:
 		_character = weakref(node)
 		call_deferred("_fit_character", node)
@@ -289,9 +306,49 @@ func _fit_shop(shop: Node) -> void:
 	if content == null:
 		return
 	var window_size = get_viewport().get_visible_rect().size
-	var side = (window_size.x - DESIGN_SIZE.x) / 2.0
+	var width = DESIGN_SIZE.x
+	if shop.name == "CoopShop":
+		width = _coop_player_row_width(content.get_node_or_null("HBoxContainer2"), window_size.x)
+	var side = (window_size.x - width) / 2.0
 	content.margin_left = side
 	content.margin_right = -side
+
+
+func _fit_coop_upgrades(ui: Node) -> void:
+	# Content is a fixed-height block with anchors at 0, so expand leaves it
+	# on the top-left unless we place it ourselves.
+	var content = ui.get_node_or_null("Content")
+	if content == null:
+		return
+	var window_size = get_viewport().get_visible_rect().size
+	var width = _coop_player_row_width(content.get_node_or_null("HBoxContainer2"), window_size.x)
+	content.rect_position = Vector2(
+		(window_size.x - width) / 2.0,
+		(window_size.y - DESIGN_SIZE.y) / 2.0
+	)
+	content.rect_size = Vector2(width, DESIGN_SIZE.y)
+
+
+# Each coop panel stops growing at half the 1920 design row. The row then
+# uses as much width as it can, until the screen ends or every visible
+# panel is already at that max. One or two players stay on the design row.
+func _coop_player_row_width(row: Node, available_width: float) -> float:
+	var players = _visible_control_count(row)
+	if players < 1:
+		players = 1
+	var panel_max = DESIGN_SIZE.x * 0.5
+	var grown = players * panel_max
+	return min(available_width, max(DESIGN_SIZE.x, grown))
+
+
+func _visible_control_count(node: Node) -> int:
+	if node == null:
+		return 0
+	var count = 0
+	for child in node.get_children():
+		if child is Control and child.visible:
+			count += 1
+	return count
 
 
 func _fit_character(selection: Node) -> void:
